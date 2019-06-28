@@ -1,0 +1,107 @@
+<div class="row">
+  <div class="col">
+    <section>
+      <header class="header">
+        <div class="row">
+          <div class="col-md-8">
+            <h4 class="text-muted ">{{'base_voltage_config' | translate }}</h4>
+          </div>
+        </div>
+      </header>
+
+    </section>
+
+    <section class="main">
+      <table class="table  table-striped ">
+        <thead>
+        <tr>
+          <th>{{'Name' | translate }}</th>
+          <th>{{'Nominal_Voltage' | translate }}</th>
+          <th>Id</th>
+          <th>Action</th>
+
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr *ngFor="let voltage of listBasVoltages">
+          <td>{{voltage.name}}
+          </td>
+
+          <td>{{voltage.nominalVoltage}}
+          </td>
+          <td>{{voltage.objectid}}
+          </td>
+          <td>
+            <button type="button" class="btn btn-succes" (click)="editnewtworkBaseVoltage(voltage)">{{ 'Edit' |
+              translate }}
+            </button>
+            <button type="button" class="btn btn-danger" (click)="onDelete(voltage)">{{ 'Delete' | translate }}</button>
+
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ajoutBaseNewtwork">
+  {{ 'AjoutBaseVoltage' | translate }}
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="ajoutBaseNewtwork" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{ 'AjoutBaseVoltage' | translate }} :</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <form (ngSubmit)="onSubmit(f)" #f="ngForm">
+
+          <div class="form-group">
+            <label for="name">
+              {{'Name' | translate }}
+            </label>
+            <input type="text" id="name" class="form-control" name="name" ngModel required>
+
+          </div>
+          <div class="form-group">
+            <label for="name">
+              Id:
+            </label>
+            <input type="text" id="name" class="form-control" name="objectid" ngModel>
+          </div>
+          <div class="form-group">
+            <label for="name">
+              {{'Nominal_Voltage' | translate }}
+            </label>
+            <input type="text" id="name" class="form-control" name="nominalVoltage" ngModel>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"> {{'Annuler' | translate }}</button>
+
+
+            <button class="btn btn-primary" type="submit" [disabled]="f.invalid"> {{'Enregistrer' | translate }}
+            </button>
+
+
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-dismissible alert-primary">
+  <button type="button" class="close" data-dismiss="alert">&times;</button>
+  <h5 style="color: green"> {{messageSave}} </h5>
+</div>

@@ -1,0 +1,281 @@
+<ng-template #dialog let-data let-ref="dialogRef">
+  <nb-card>
+    <nb-card-header>{{ 'warning' | translate }}</nb-card-header>
+    <nb-card-body>{{ 'snapshotDeleted' | translate }}</nb-card-body>
+    <nb-card-footer>
+      <button nbButton (click)="closeDialogAndRefresh(ref)">{{ 'refreshData' | translate }}</button>
+    </nb-card-footer>
+  </nb-card>
+</ng-template>
+
+<nb-card class="nbCard">
+  <nb-card-header>
+    <div class="row show-grid">
+      <div class="col-12 col-md-10">
+        <nb-accordion>
+          <nb-accordion-item (collapsedChange)="forceResize(1000)">
+            <nb-accordion-item-header>{{ 'filter' | translate }}</nb-accordion-item-header>
+            <nb-accordion-item-body>
+              <div class="row show-grid" #h>
+                <div class="col-4 col-md-4">
+                  <nb-select multiple placeholder="{{ 'zonesFilter' | translate }}" [(selected)]="selectedItem" #f1>
+                    <nb-option (selectionChange)="selectedItem = []">{{ 'clean' | translate }}</nb-option>
+                    <nb-option *ngFor="let zone of zones" [value]="zone.objectid">{{zone.name}}</nb-option>
+                  </nb-select>
+                </div>
+                <div class="col-3 col-md-2">
+                  <!--Filter timerange-->
+                  <nb-select placeholder="{{ 'timerangeFilter' | translate }}" [(selected)]="selectedDropDown" #f2>
+                    <nb-option *ngFor="let timerange of timeranges" [value]="timerange.name">{{timerange.name}}
+                    </nb-option>
+                  </nb-select>
+                </div>
+
+                <div class="col-3 col-md-4">
+                  <nb-checkbox [value]="nbExcludeChecked" (change)="toggle()"> {{ 'exclude' | translate }}</nb-checkbox>
+                </div>
+
+                <div class="col-2 col-md-2">
+                  <button nbButton [disabled]="!buttonEnabled" (click)="onClickApply()">{{ 'apply' | translate }}
+                  </button>
+                </div>
+              </div>
+            </nb-accordion-item-body>
+          </nb-accordion-item>
+        </nb-accordion>
+      </div>
+      <div class="col-12 col-md-2">
+        <nb-actions>
+          <nb-action (click)="pauseTimer()" *ngIf="pauseTimerEnabled" [ngClass]="{'cursor-pointer': pauseTimerEnabled}">
+            <em class="nb-pause-outline"></em>
+          </nb-action>
+          <nb-action (click)="playTimer()" *ngIf="playTimerEnabled" [ngClass]="{'cursor-pointer': playTimerEnabled}">
+            <em class="nb-play"></em>
+          </nb-action>
+          <nb-action (click)="refresh()" style="cursor: pointer">
+            <em class="nb-loop"></em>
+          </nb-action>
+        </nb-actions>
+        <div role="alert"
+             [ngClass]="{'alert': true, 'alert-warning': isChanged, 'alert-danger': playTimerEnabled, 'alert-info': !isChanged}"
+             style="align-content: center">
+          {{lastupdate | date: 'HH:mm:ss'}} / {{ticks}}s
+        </div>
+      </div>
+    </div>
+  </nb-card-header>
+  <nb-card-body>
+    <p-treeTable fill-height (change)="heightChange($event)" [footerElement]="header"
+                 [value]="files" [columns]="scrollableCols" [frozenColumns]="frozenCols"
+                 [scrollable]="true" [scrollHeight]="treeTableHeight" frozenWidth="440px"
+                 [loading]="load"
+                 (onNodeExpand)="onNodeExpand($event)"
+                 [contextMenu]="cm"
+                 [(contextMenuSelection)]="selectedNode"
+                 [ngClass]="{'easeTransition' : true}"
+
+                 #tp>
+      <ng-template pTemplate="colgroup" let-columns>
+        <colgroup>
+          <col *ngFor="let col of columns" style="width:70px">
+        </colgroup>
+      </ng-template>
+      <ng-template pTemplate="header" let-columns>
+        <tr style="text-align: left" [ttContextMenuRow]="{node:{}}">
+          <th *ngFor="let col of columns" class="draggable" draggable='true'
+              (dragstart)="dragN($event,col)" (dragend)="dragEnd(event)"
+              (contextmenu)="onRightClickN(col.header.afsRunnerId)"
+          >
+            <ng-template #headerContent>
+              <table class="toolTipTable">
+                <tr>
+                  <td>{{'CaseType' | translate }}: {{col.type}}</td>
+                </tr>
+                <tr>
+                  <td>{{ 'ComputationDate' | translate }}: {{col.header.computationDate}}</td>
+                </tr>
+                <tr>
+                  <td>{{ 'NetworkDate' | translate }}: {{col.header.networkDate}}</td>
+                </tr>
+                <tr ngClass="compNoRemedial" *ngIf="col.header.isComputationWithRemedials==false">
+                  {{'compNoRemedial_msg'| translate }}
+                </tr>
+              </table>
+            </ng-template>
+            <strong *ngIf="col.header.text == undefined">{{col.header}}</strong>
+            <strong *ngIf="col.header.text !== undefined" [ngbTooltip]="headerContent" placement="top"
+                    data-toggle="tooltip" container="body"><em
+              [ngClass]="{'compNoRemedial': col.header.isComputationWithRemedials===false }">{{col.header.text| date:
+              'HH:mm'}} </em></strong>
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-rowNode let-rowData="rowData" let-columns="columns">
+        <tr style="height:30px !important ;text-align: left">
+          <td class="td" *ngFor=" let val of rowData.limitValues;let i=index" [ttContextMenuRow]="rowNode"
+              (contextmenu)="onRightClick(columns[i].header.idContext,rowData.parent,columns[i].header.text ,rowNode)"
+              (dragend)="dragEnd(event)" class="draggable" draggable='true'
+              (dragstart)="dragNK($event,columns[i],rowData.name)">
+            <ng-template [ngIf]="rowData.type==1">
+              <div ngClass="purple_cell" *ngIf="val.status=='V_R_CMP_NOK' || val.status=='C_CMP_NOK'"></div>
+              <div ngClass="red_strong_cell" *ngIf="val.status=='V_NO_R_AV'"></div>
+              <div ngClass="red_cell" *ngIf="val.status=='V_R_AV'"></div>
+              <div ngClass="orage_cell" *ngIf="val.status=='V_RX_EFF'"></div>
+              <div ngClass="green_cell" *ngIf="val.status=='V_R1_EFF'"></div>
+              <div ngClass="NoColor_cell" *ngIf="val.status=='NO_V'"></div>
+            </ng-template>
+            <ng-template [ngIf]="rowData.type==2">
+              <div ngClass="purple_cell" *ngIf="val.status=='V_R_CMP_NOK'"></div>
+              <div ngClass="red_cell" *ngIf="val.status=='V_R_AV'"></div>
+              <div ngClass="green_cell" *ngIf="val.status=='NO_V'"></div>
+            </ng-template>
+
+            <ng-template [ngIf]="rowData.type==0">
+              <div *ngIf="val.limitViolation">
+                <ng-template #htmlContent>
+                  <table class="toolTipTable">
+                    <tr>
+                      <td>{{ 'subjectId' | translate }}:{{val.limitViolation.subjectId}}</td>
+                    </tr>
+                    <tr>
+                      <td>{{ 'limitType' | translate }}: {{('limitType_'+val.limitViolation.limitType) | translate}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{{'limit' | translate }}:{{val.limitViolation.limit|number:'1.0-0'}}</td>
+                    </tr>
+                    <tr>
+                      <td *ngIf="val.limitViolation.acceptableDuration">{{'acceptableDuration' |
+                        translate}}:{{val.limitViolation.acceptableDuration}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td *ngIf="val.limitViolation.side">{{ 'side' | translate }}:
+                        {{('side_'+val.limitViolation.side) | translate}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{{ 'value' | translate }}:{{val.limitViolation.value|number:'1.0-0'}}</td>
+                    </tr>
+                    <tr>
+                      <td *ngIf="val.limitViolation.preValueMw">{{ 'preValueMw' | translate }}:
+                        {{val.limitViolation.preValueMw |number:'1.0-0'}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td *ngIf="val.limitViolation.preValue">{{ 'preValue' | translate }}:
+                        {{val.limitViolation.preValue|number:'1.0-0'}}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td *ngIf="val.limitViolation.valueMw">{{ 'valueMw' | translate }}:
+                        {{val.limitViolation.valueMw|number:'1.0-0'}}
+                      </td>
+                    </tr>
+                  </table>
+                </ng-template>
+                <em container="body" placement="top" data-toggle="tooltip"
+                    [ngbTooltip]="htmlContent">
+                  {{val.limitViolation.value /val.limitViolation.limit*100 |number:'1.0-0'}}%
+                </em>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="frozenbody" let-rowNode let-rowData="rowData">
+        <tr style="height:30px !important ;">
+          <td style="text-align: left">
+            <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+
+            <ng-template [ngIf]="rowData.type==1">
+              {{rowData.name.id}}
+              <ng-template #tlp>
+                <table class="toolTipTable">
+                  <tr>
+                    <td>{{rowData.numberCandidateRem}} {{'nbr_rem_candidate'| translate }}</td>
+                  </tr>
+                  <tr>
+                    <td>{{rowData.numberComputedRem}} {{'nbr_rem_computed'| translate }}</td>
+                  </tr>
+                  <tr>
+                    <td>{{rowData.numberEfficientRem}} {{'nbr_rem_efficient'| translate }}</td>
+                  </tr>
+                </table>
+              </ng-template>
+
+              <em container="body" placement="right" data-toggle="tooltip"
+                  *ngIf="rowData.numberCandidateRem!=0 || rowData.numberComputedRem !=0 || rowData.numberEfficientRem !=0"
+                  [ngbTooltip]="tlp"> ({{rowData.numberCandidateRem}} | {{rowData.numberComputedRem}} |
+                {{rowData.numberEfficientRem}})
+              </em>
+            </ng-template>
+
+            <ng-template [ngIf]="rowData.type==0">
+              <ng-template [ngIf]="rowData.identifier.acceptableDuration && rowData.identifier.side">
+                {{rowData.identifier.subjectId}} ({{('limitType_'+ rowData.identifier.limitType) | translate}} |
+                {{rowData.identifier.acceptableDuration}} | {{('side_'+rowData.identifier.side) | translate }})
+              </ng-template>
+
+              <ng-template [ngIf]="!rowData.identifier.acceptableDuration && rowData.identifier.side">
+                {{rowData.identifier.subjectId}} ({{('limitType_'+ rowData.identifier.limitType) | translate}} |
+                {{('side_'+rowData.identifier.side) | translate }})
+              </ng-template>
+
+              <ng-template [ngIf]="rowData.identifier.acceptableDuration && !rowData.identifier.side">
+                {{rowData.identifier.subjectId}} ({{('limitType_'+ rowData.identifier.limitType) | translate}} |
+                {{rowData.identifier.acceptableDuration}})
+              </ng-template>
+
+              <ng-template [ngIf]="!rowData.identifier.acceptableDuration && !rowData.identifier.side">
+                {{rowData.identifier.subjectId}} ({{('limitType_'+ rowData.identifier.limitType) | translate}})
+              </ng-template>
+            </ng-template>
+
+            <ng-template [ngIf]="rowData.type==2">
+
+
+              <ng-template #tlp1>
+                <table class="toolTipTable">
+                  <tr>
+                    <td style="background-color:#696969;  font-size: 20px;">{{rowData.name}}</td>
+                  </tr>
+                </table>
+              </ng-template>
+              <em container="body" placement="top" data-toggle="tooltip" tooltipClass="my-custom-class"
+                  [ngbTooltip]="tlp1">{{rowData.name}}
+              </em>
+
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-treeTable>
+    <p-contextMenu #cm [model]="items" appendTo="body"></p-contextMenu>
+    <p-paginator [rows]="size" [alwaysShow]="showPaginator"
+                 [totalRecords]="totalContingencies" (onPageChange)="paginate($event)"
+                 [rowsPerPageOptions]="[50,100,200]" dropdownAppendTo="body"
+                 #pg></p-paginator>
+    <p-dialog [(visible)]="display"
+              [closable]="false">
+      <p-header>
+        <p>{{'prio_for'|translate}} :{{iDContingency}}<br/>
+          {{'start_date'|translate}}: {{startDate | date: "dd-MMM-yyyy HH:mm"}}
+        </p>
+      </p-header>
+      <p-pickList [source]="availableRemedials" [target]="priorizedRemedialsArray" height="1000" dragdrop="true"
+                  sourceHeader="{{'av_remedials'|translate}}"
+                  targetHeader="{{'prio_remedials'|translate}}">
+        <ng-template let-item pTemplate="item">
+          <div>{{item.shortDescription}}</div>
+        </ng-template>
+      </p-pickList>
+
+      <p-footer>
+        <p-button label="{{'save'|translate}}" (click)="savePriorizedRemedial()"></p-button>
+        <p-button label="{{'cancel'|translate}}" (click)="cancel()"></p-button>
+      </p-footer>
+    </p-dialog>
+  </nb-card-body>
+</nb-card>

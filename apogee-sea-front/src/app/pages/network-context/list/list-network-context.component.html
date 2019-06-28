@@ -1,0 +1,85 @@
+<nb-card class="nbCard">
+  <nb-card-header id="nb">
+    {{'NetworkContexts'|translate}}
+    <button nbButton size="small" class="float-right btn-small" (click)="toggleLoading()" [nbSpinner]="loading" nbSpinnerSize="xsmall" nbSpinnerMessage=""><em class="nb-loop"></em> {{ 'refreshData' | translate }}</button>
+  </nb-card-header>
+  <nb-card-body>
+    <p-table fill-height (change)="heightChange($event)" [columns]="cols" [value]="contexts" [scrollable]="true" [scrollHeight]="tableHeight"
+             sortField="insertionDate" sortOrder="-1"
+             #dt>
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th [pSortableColumn]="columns[0].field">{{ 'CaseType' | translate }}
+            <p-sortIcon [field]="columns[0].field"></p-sortIcon>
+          </th>
+          <th [pSortableColumn]="columns[1].field">{{ 'CaseCategory' | translate }}
+            <p-sortIcon [field]="columns[1].field"></p-sortIcon>
+          </th>
+          <th [pSortableColumn]="columns[2].field" (click)="updateSortOrder()"> {{ 'ComputationDate' | translate }}
+            <p-sortIcon [field]="columns[2].field"></p-sortIcon>
+          </th>
+          <th [pSortableColumn]="columns[3].field" (click)="updateSortOrder()"> {{ 'NetworkDate' | translate }}
+            <p-sortIcon [field]="columns[3].field"></p-sortIcon>
+          </th>
+          <th [pSortableColumn]="columns[4].field" (click)="setSortOrder()">{{ 'insertionDate' | translate }}
+            <em class="ui-sortable-column-icon pi pi-fw"
+                [ngClass]="{'pi-sort-up': sortOrder === 1, 'pi-sort-down': sortOrder === -1, 'pi-sort': sortOrder ===0}"></em>
+          </th>
+          <th [pSortableColumn]="columns[5].field">{{ 'status' | translate }}
+            <p-sortIcon [field]="columns[5].field"></p-sortIcon>
+          </th>
+          <th style="width: 20%"> {{ 'SecurityAnalysisComputations' | translate }}</th>
+        </tr>
+        <tr>
+          <th *ngFor="let col of columns" [ngSwitch]="col.field">
+            <input *ngSwitchCase="'caseType'" pInputText type="text" placeholder="{{ 'CaseType' | translate }}"
+                   class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+            <input *ngSwitchCase="'caseCategory'" pInputText type="text" placeholder="{{ 'CaseCategory' | translate }}"
+                   class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+            <input *ngSwitchCase="'computationDate'" pInputText type="text"
+                   placeholder="{{ 'ComputationDate' | translate }}" class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+            <input *ngSwitchCase="'networkDate'" pInputText type="text"
+                   placeholder="{{ 'NetworkDate' | translate }}" class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+            <input *ngSwitchCase="'insertionDate'" pInputText type="text"
+                   placeholder="{{ 'insertionDate' | translate }}" class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+            <input *ngSwitchCase="'execStatus'" pInputText type="text" placeholder="{{ 'status' | translate }}"
+                   class="inp"
+                   (input)="dt.filter($event.target.value, col.field, col.filterMatchMode)">
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-context>
+        <tr>
+          <td>{{context.caseType}}</td>
+          <td>{{context.caseCategory}}</td>
+          <td>{{context.computationDate}}</td>
+          <td>{{context.networkDate}}</td>
+          <td>{{context.insertionDate}}</td>
+          <td>{{context.execStatus}}</td>
+          <td style="width: 20%">
+            <ul *ngFor="let compResultList of context.computationResultList">
+              {{compResultList.startDate|date:'yyyy-MM-dd HH:mm:ss'}} ->
+              {{compResultList.endDate|date:'yyyy-MM-ddHH:mm:ss'}}<br/>
+              {{compResultList.idAfsRunner}}
+            </ul>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage" let-columns>
+        <tr>
+          <td>
+            {{'No_Records'| translate }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </nb-card-body>
+</nb-card>
+
+
+

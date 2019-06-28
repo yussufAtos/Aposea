@@ -1,0 +1,22 @@
+<div class="header-container"
+     [class.left]="position === 'normal'"
+     [class.right]="position === 'inverse'">
+  <div class="logo-containter">
+    <a (click)="toggleSidebar()" href="#" class="navigation"><em class="nb-menu"></em></a>
+    <div class="logo" (click)="goToHome()">Apogee<span>SEA</span></div>
+  </div>
+  <ngx-theme-switcher></ngx-theme-switcher>
+</div>
+
+<div class="header-container">
+  <ngx-layout-language-switcher></ngx-layout-language-switcher>
+
+  <nb-actions
+    size="medium"
+    [class.right]="position === 'normal'"
+    [class.left]="position === 'inverse'">
+    <nb-action>
+      <nb-user [nbContextMenu]="userMenu" [name]="user?.user_name" nbContextMenuTag="user-context-menu"></nb-user>
+    </nb-action>
+  </nb-actions>
+</div>

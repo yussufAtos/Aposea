@@ -1,0 +1,17 @@
+:host ::ng-deep .ui-table .ui-sortable-column.ui-state-highlight {
+  color: #cccccc;
+  background-color: transparent;
+}
+
+:host ::ng-deep .inp {
+  background-color: #f2f1fe;
+}
+
+.nbCard {
+  background-color: #111218;
+  margin-top: -25px;
+  margin-right: -25px;
+  margin-left: -25px;
+  height: 100%;
+
+}
